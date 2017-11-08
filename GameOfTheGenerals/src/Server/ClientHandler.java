@@ -67,8 +67,15 @@ class ClientHandler extends Thread{
 				int npnum=Integer.parseInt(np);
 				int opnum=Integer.parseInt(op);
 				
+				String ed = input.nextLine();
+				int end=Integer.parseInt(ed);
+				setup.setEnd(end);
 				setup.move(npnum,opnum);
-				output.println("1");
+				
+				
+				
+				output.println(Integer.toString(setup.getEnd()));
+				
 				
 			}
 			else if(request.equals("3")) {
@@ -83,6 +90,8 @@ class ClientHandler extends Thread{
 			}
 			
 			
+			
+			
 		}while (!request.equals("0"));
 		try{
 			System.out.println("Closing down connection…");
@@ -93,20 +102,3 @@ class ClientHandler extends Thread{
 		}
 	}
  } 
-
-/////////////////////////////////
-//////////////////////////
-
-/*if (request.equals("1")){
-int a=item.takeOne();//If none available,
-//wait until resource(s)
-//available (and thread is
-//at front of thread queue).
-output.println("Request granted.");
-output.println(a+"Resources left.");
-}
-else {
-output.println("**Invalid**");
-output.println("Choose new value");
-}
-*/
