@@ -30,7 +30,7 @@ public class ClientGUI {
 	//saves values into the variables mostly for manipulation
 	private int setCount=0,ctr=0;
 	private static int ppc=0, a,b;
-	private static int ppr=0, snp, sop;
+	private static int ppr=0, snp, sop,end=0,win=0;
 	private int done=0;
 	
 	//Contains the one for the thread manipulation
@@ -128,14 +128,25 @@ public class ClientGUI {
 		//this is the loop until the end of the game
 		while(true) {
 			//this waits until a button is pressed
+			if(end==1) {
+				networkOutput.println(5);
+				if(win==1) {
+					txtpnThe.setText("You Win");
+				}
+				else {
+					txtpnThe.setText("You Lose");
+				}
+				break;
+			}
 			if(NetCount==1){
 				networkOutput.println(2);
+				//old position of the enemy
 				int oop= Integer.parseInt(networkInput.nextLine());
 				//Gets the new position of the enemy
 				int onp = Integer.parseInt(networkInput.nextLine());
 				System.out.print(onp+" "+oop+"\n");
 				if(oop!=-1||onp!=-1) {
-					if(boardLook[onp/9][onp%9]-15==boardLook[oop/9][oop%9]||boardLook[onp/9][onp%9]==boardLook[oop/9][oop%9]-15) {
+					if((boardLook[onp/9][onp%9]-15==boardLook[oop/9][oop%9]&&boardLook[onp/9][onp%9]-15>0)||(boardLook[onp/9][onp%9]==boardLook[oop/9][oop%9]-15 && boardLook[oop/9][oop%9]-15>0)) {
 						boardLook[onp/9][onp%9]=0;
 						boardLook[oop/9][oop%9]=0;
 					}
@@ -166,6 +177,16 @@ public class ClientGUI {
 			//this is for when the pieces are being laid out
 			if(NetCount==0) {
 				//this signals that the board i being set up
+				if(end==1) {
+					networkOutput.println(5);
+					if(win==1) {
+						txtpnThe.setText("You Win");
+					}
+					else {
+						txtpnThe.setText("You Lose");
+					}
+					break;
+				}
 				networkOutput.println("1");
 				
 				//this part is the one that sends the array which contains the positions in the board
@@ -191,7 +212,7 @@ public class ClientGUI {
 				reloadBoard();
 				//tells that it is not to the game part
 				NetCount++;
-				if(turn==0) {
+				if(turn==1) {
 					networkOutput.println("4");
 					networkInput.nextLine();
 				}
@@ -200,26 +221,39 @@ public class ClientGUI {
 			else if(NetCount==1){
 				System.out.print("q");
 				//tells the next movement
-				
+				if(end==1) {
+					if(win==1) {
+						txtpnThe.setText("You Win");
+					}
+					else {
+						txtpnThe.setText("You Lose");
+					}
+				}
 				//sends the new position
 				networkOutput.println(snp);
 				//sends the old position
 				networkOutput.println(sop);
 				//this gets the old position of the enemy 
-				networkInput.nextLine();
+				networkOutput.println(Integer.toString(end));
 				
+				end=Integer.parseInt(networkInput.nextLine());
 			}
 			//allows the waiting till a button is pressed
 			waiter=true;
-			for(int i1=0; i1<8; i1++) { 
-				for(int j1=0; j1<9; j1++) {
-					list[i1][j1].setEnabled(true);
+			
+			if(end==0) {
+				for(int i1=0; i1<8; i1++) { 
+					for(int j1=0; j1<9; j1++) {
+						list[i1][j1].setEnabled(true);
+					}
 				}
 			}
+			
+			
+			
 		}
 		/////////////////////////////////////////////////////////////////////////////
 	}
-
 	
 	public ClientGUI() {
 		//initialize is the first window 
@@ -244,6 +278,7 @@ public class ClientGUI {
 			ctr=0;
 		}
 	}
+	
 	private void initialize() {
 		frmGameOfThe = new JFrame();
 		frmGameOfThe.setBackground(Color.LIGHT_GRAY);
@@ -308,10 +343,53 @@ public class ClientGUI {
 		if(turn==1) {
 			boardLook[7-a][8-b]=boardLook[7-ppr][8-ppc];
 			boardLook[7-ppr][8-ppc]=0;
+			if(boardLook[7-a][8-b]==30 && a==7) {
+				if(7-b>=0) {
+					if(9-b<9){
+						if(boardLook[6-a][8-b]==0 && boardLook[8-a][8-b]==0) {
+							end=1;
+							win=1;
+						}
+					}
+					else {
+						if(boardLook[6-a][8-b]==0) {
+							end=1;
+							win=1;
+						}
+					}
+				}else {
+					if(boardLook[8-a][8-b]==0) {
+						end=1;
+						win=1;
+					}
+				}
+			}
 		}
 		else{
 			boardLook[a][b]=boardLook[ppr][ppc];
 			boardLook[ppr][ppc]=0;
+			
+			if(boardLook[a][b]==15 && a==7) {
+				if(b-1>=0) {
+					if(b+1<9){
+						if(boardLook[a-1][b]==0 && boardLook[a+1][b]==0) {
+							end=1;
+							win=1;
+						}
+					}
+					else {
+						if(boardLook[a-1][b]==0) {
+							end=1;
+							win=1;
+						}
+					}
+				}else {
+					if(boardLook[a+1][b]==0) {
+						end=1;
+						win=1;
+					}
+				}
+			}
 		}
 		
 		
@@ -324,6 +402,7 @@ public class ClientGUI {
 			sop=ppr*9+ppc;
 		}
 	}
+	
 	
 	private void chal() {
 		snp=-1;
@@ -383,16 +462,13 @@ public class ClientGUI {
 					snp=sop;
 				}
 			}else if(boardLook[7-a][8-b]==15){//if the challenged is a flag
-				if(boardLook[7-a][8-b]==boardLook[7-ppr][8-ppc]-15){
-					boardLook[7-a][8-b]=boardLook[7-ppr][8-ppc];
-					boardLook[7-ppr][8-ppc]=0;
-					snp=((7-a)*9)+(8-b);
-					sop=((7-ppr)*9)+(8-ppc);
-				}else {
-					boardLook[7-ppr][8-ppc]=0;
-					sop=((7-ppr)*9)+(8-ppc);
-					snp=sop;
-				}
+				boardLook[7-a][8-b]=boardLook[7-ppr][8-ppc];
+				boardLook[7-ppr][8-ppc]=0;
+				snp=((7-a)*9)+(8-b);
+				sop=((7-ppr)*9)+(8-ppc);
+				end=1;
+				win=1;
+				
 			}
 		}
 		else{
@@ -446,20 +522,15 @@ public class ClientGUI {
 					snp=sop;
 				}
 			}else if(boardLook[a][b]==30) {
-				if(boardLook[a][b]-15==boardLook[ppr][ppc]){
-					boardLook[7-a][8-b]=boardLook[7-ppr][8-ppc];
-					boardLook[7-ppr][8-ppc]=0;
-					snp=a*9+b;
-					sop=ppr*9+ppc;
-				}else {
-					boardLook[7-ppr][8-ppc]=0;
-					sop=ppr*9+ppc;
-					snp=sop;
-				}
+				boardLook[7-a][8-b]=boardLook[7-ppr][8-ppc];
+				boardLook[7-ppr][8-ppc]=0;
+				snp=a*9+b;
+				sop=ppr*9+ppc;
+				end=1;
+				win=1;
 			}
 		}
 	}
-	
 	
 	private void markMove() {
 		
@@ -526,6 +597,7 @@ public class ClientGUI {
 			}
 		}
 	}
+
 	private void mnm(int i,int j) {
 		list[i][j].addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg1) {
@@ -592,6 +664,7 @@ public class ClientGUI {
 			}
 		});
 	}
+
 	private void initialize2() {
 		//This is the initiation of where the other components go into
 		frame = new JFrame();
@@ -1289,4 +1362,5 @@ public class ClientGUI {
 		
 		//////////////////////////////////////////////////
 	}
+
 }

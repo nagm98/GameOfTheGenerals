@@ -3,12 +3,15 @@ package Server;
 class Board
 {
 	private int[][] numResources;
-	private int placed= 0,rnp=-1,rop=-1;
+	private int placed= 0,rnp=-1,rop=-1,end=0;
 	public Board(int[][] startLevel){
 		numResources = startLevel;
 	}
 	public int[][] getBoard(){
 		return numResources;
+	}
+	public int getEnd(){
+		return end;
 	}
 	public int getPlaced(){
 		return placed;
@@ -74,6 +77,9 @@ class Board
 		numResources[np/9][np%9]=numResources[op/9][op%9];
 		numResources[op/9][op%9]=0;
 		return numResources;
+	}
+	public synchronized void setEnd(int ed) {
+		end=ed;
 	}
 	public synchronized void first() {
 		placed++;
