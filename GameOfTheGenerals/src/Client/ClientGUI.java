@@ -10,6 +10,8 @@ import javax.swing.JTextPane;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 import Client.ClientGUI;
 
@@ -31,7 +33,7 @@ public class ClientGUI {
 	private int setCount=0,ctr=0;
 	private static int ppc=0, a,b;
 	private static int ppr=0, snp, sop,end=0,win=0;
-	private int done=0;
+	//private int done=0;
 	
 	//Contains the one for the thread manipulation
 	private static int turn=0,NetCount = -1;
@@ -100,6 +102,12 @@ public class ClientGUI {
 	////////////////////////////////////////////////////////////////////////////////////////
 	
 	public static void main(String[] args) {
+		try {
+			UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+				| UnsupportedLookAndFeelException e1) {
+			e1.printStackTrace();
+		}
 		//this part sets all the values in the board to 0
 		for (int i = 0; i < 8; i++) {
 	    	for(int j =0;j<9; j++) {
@@ -254,14 +262,14 @@ public class ClientGUI {
 		}
 		/////////////////////////////////////////////////////////////////////////////
 	}
-	
+	////starts the Initialization of the GUI will allow choosing which window to lunch
 	public ClientGUI() {
 		//initialize is the first window 
 		initialize();
 		//the game window
 		initialize2();
 	}
-	
+	//this part is the one that allows the placement of the items into the board
 	private void boardSetting() {
 		list[a][b].setIcon(new ImageIcon(ClientGUI.class.getResource("/img/"+pieces[setCount])));//sets the piece
 		boardLook[a][b]=setCount+1;
@@ -278,7 +286,7 @@ public class ClientGUI {
 			ctr=0;
 		}
 	}
-	
+	//this just initializes the connector to the network to be able to choose the port and the host
 	private void initialize() {
 		frmGameOfThe = new JFrame();
 		frmGameOfThe.setBackground(Color.LIGHT_GRAY);
@@ -338,27 +346,27 @@ public class ClientGUI {
 		lblPortNumber.setBounds(72, 196, 78, 14);
 		frmGameOfThe.getContentPane().add(lblPortNumber);
 	}
-	
+	//this will make the piece to move in the board
 	private void move() {
 		if(turn==1) {
 			boardLook[7-a][8-b]=boardLook[7-ppr][8-ppc];
 			boardLook[7-ppr][8-ppc]=0;
-			if(boardLook[7-a][8-b]==30 && a==7) {
+			if(boardLook[7-a][8-b]==30 && a==0) {
 				if(7-b>=0) {
 					if(9-b<9){
-						if(boardLook[6-a][8-b]==0 && boardLook[8-a][8-b]==0) {
+						if(boardLook[7-a][7-b]==0 && boardLook[7-a][9-b]==0) {
 							end=1;
 							win=1;
 						}
 					}
 					else {
-						if(boardLook[6-a][8-b]==0) {
+						if(boardLook[7-a][7-b]==0) {
 							end=1;
 							win=1;
 						}
 					}
 				}else {
-					if(boardLook[8-a][8-b]==0) {
+					if(boardLook[7-a][9-b]==0) {
 						end=1;
 						win=1;
 					}
@@ -369,22 +377,22 @@ public class ClientGUI {
 			boardLook[a][b]=boardLook[ppr][ppc];
 			boardLook[ppr][ppc]=0;
 			
-			if(boardLook[a][b]==15 && a==7) {
+			if(boardLook[a][b]==15 && a==0) {
 				if(b-1>=0) {
 					if(b+1<9){
-						if(boardLook[a-1][b]==0 && boardLook[a+1][b]==0) {
+						if(boardLook[a][b-1]==0 && boardLook[a][b+1]==0) {
 							end=1;
 							win=1;
 						}
 					}
 					else {
-						if(boardLook[a-1][b]==0) {
+						if(boardLook[a][b-1]==0) {
 							end=1;
 							win=1;
 						}
 					}
 				}else {
-					if(boardLook[a+1][b]==0) {
+					if(boardLook[a][b+1]==0) {
 						end=1;
 						win=1;
 					}
@@ -403,7 +411,7 @@ public class ClientGUI {
 		}
 	}
 	
-	
+	//this is if the pieces challenge the enemy this uses the rules of the game to see who wins and send the proper result
 	private void chal() {
 		snp=-1;
 		sop=-1; //new position, old position 
@@ -531,7 +539,7 @@ public class ClientGUI {
 			}
 		}
 	}
-	
+	//this marks a tile either red or green depending on whether an enemy is there or if nothing is places
 	private void markMove() {
 		
 		if(list[a][b].getIcon()!=null && ((turn==1 && boardLook[7-a][8-b]>15)||(turn==0 && boardLook[a][b]<16))) {//this is if a piece is on the tile
@@ -597,7 +605,7 @@ public class ClientGUI {
 			}
 		}
 	}
-
+	//this is what merges the separate functions above chal, markMove and move
 	private void mnm(int i,int j) {
 		list[i][j].addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg1) {
@@ -664,7 +672,7 @@ public class ClientGUI {
 			}
 		});
 	}
-
+	//this initializes the board and makes use of mnm
 	private void initialize2() {
 		//This is the initiation of where the other components go into
 		frame = new JFrame();
@@ -1295,7 +1303,8 @@ public class ClientGUI {
 		lblGame.setBounds(722, 66, 82, 20);
 		frame.getContentPane().add(lblGame);
 		
-		JButton btnResign = new JButton("RESIGN");
+		/**
+		 * JButton btnResign = new JButton("RESIGN");
 		btnResign.setBackground(Color.RED);
 		btnResign.setFont(new Font("Stencil", Font.PLAIN, 14));
 		btnResign.setBounds(722, 333, 89, 23);
@@ -1330,6 +1339,7 @@ public class ClientGUI {
 				
 			}
 		});
+		 */
 		
 		/////////////////////////////////////////////////////////////////////////////////////
 		//Game setting the action listener for the game to start
