@@ -38,6 +38,8 @@ class ClientHandler extends Thread{
 			int turn;
 			request = input.nextLine();
 			if(request.equals("1")) {
+				int bn=Integer.parseInt(input.nextLine());
+				
 				try {
 					arrFromClient = (int[][]) inFromClient.readObject();
 				} catch (ClassNotFoundException e) {
@@ -46,19 +48,21 @@ class ClientHandler extends Thread{
 					e.printStackTrace();
 				}
 				
-				turn=setup.getPlaced();
+				
+				turn=setup.getPlaced(bn);
 				output.println(turn);
-				setup.PlacePiece(arrFromClient);
+				setup.PlacePiece(bn,arrFromClient);
 				try {
-					outToClient.writeObject(setup.getBoard());
+					outToClient.writeObject(setup.getBoard(bn));
+					
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
 			else if(request.equals("2")) {
-				
-				rop=setup.getRop();
-				rnp=setup.getRnp();
+				int bn=Integer.parseInt(input.nextLine());
+				rop=setup.getRop(bn);
+				rnp=setup.getRnp(bn);
 				output.println(rop);
 				output.println(rnp);
 				np = input.nextLine();
@@ -68,30 +72,42 @@ class ClientHandler extends Thread{
 				int opnum=Integer.parseInt(op);
 				
 				String ed = input.nextLine();
+				String w = input.nextLine();
 				int end=Integer.parseInt(ed);
-				setup.setEnd(end);
-				setup.move(npnum,opnum);
+				int win=Integer.parseInt(w);
+				setup.setEnd(bn,end);
+				setup.setWin(bn,win);
+				setup.move(bn,npnum,opnum);
 				
 				
 				
-				output.println(Integer.toString(setup.getEnd()));
-				
+				output.println(Integer.toString(setup.getEnd(bn)));
+				output.println(Integer.toString(setup.getWin(bn)));
 				
 			}
 			else if(request.equals("3")) {
-				turn=setup.getPlaced();
+				int bn=Integer.parseInt(input.nextLine());
+				turn=setup.getPlaced(bn);
 				output.println(turn);
 				
 			}
 			else if(request.equals("4")) {
-				setup.first();
+				int bn=Integer.parseInt(input.nextLine());
+				setup.first(bn);
 				output.println(" ");
 				
 			}
 			
 			
 			
-			
+			else if(request.equals("6")) {
+				String un = input.nextLine();
+				output.println(setup.getPlayer(un));
+				output.println(setup.getPlayer1());
+				output.println(setup.getPlayer2());
+				output.println(setup.getPlayer3());
+				output.println(setup.getPlayer4());
+			}
 		}while (!request.equals("0"));
 		try{
 			System.out.println("Closing down connection…");

@@ -26,13 +26,16 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Scanner;
 import java.awt.Color;
+import java.awt.Button;
+
 
 
 public class ClientGUI {
 	//saves values into the variables mostly for manipulation
 	private int setCount=0,ctr=0;
-	private static int ppc=0, a,b;
+	private static int ppc=0, a,b,uid;
 	private static int ppr=0, snp, sop,end=0,win=0;
+	private static String uname;
 	//private int done=0;
 	
 	//Contains the one for the thread manipulation
@@ -51,15 +54,24 @@ public class ClientGUI {
 	//Gui Variables
 	private static JButton[][] list;
 	private JFrame frmGameOfThe;
-	private JFrame frame;
+	private JFrame frmGameBoard;
 	private JTextField txtEnterHostName;
 	private final JButton Connect = new JButton("Connect");
 	private static ClientGUI window;
-	private JTextField textField;
+	private JTextField txtPlayer;
 	private JLabel lblPortNumber;
 	private JButton setPiece;
 	private static JTextPane txtpnThe;
 	
+	private JFrame frame3;
+	private static JTextField textField;
+	private static JTextField textField_1;
+	private static JTextField textField_2;
+	private static JTextField textField_3;
+	private static JTextField textField_4;
+	private static JTextField textField_5;
+	private static JTextField textField_6;
+	private static JButton btnStartTournament;
 	//Board storage variables
 	private static int[][] boardLook= new int[8][9];
 	private static String[] pieces= {"5star.png","4star.png","3star.png","2star.png","1star.png","colonel.png","ltcolonel.png","major.png","captain.png","1stleut.png", "2ndleut.png", "sergent.png", "private.png","spy.png","flag.png","Enemy.png"};
@@ -124,20 +136,38 @@ public class ClientGUI {
 					
 					//starts the window to connect to the network
 					window.frmGameOfThe.setVisible(true);
-					
+					window.frame3.setVisible(false);
 					//keeps the second window closed
-					window.frame.setVisible(false);
+					window.frmGameBoard.setVisible(false);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 		});
 		
+		while(waiter==true) {//this waits till a button is pressed
+			//this just uses try catch to be able to use sleep which waits every one second
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		waiter=true;
+		networkOutput.println("6");
+		networkOutput.println(uname);
+		uid=Integer.parseInt(networkInput.nextLine());
+		textField.setText(networkInput.nextLine());
+		textField_1.setText(networkInput.nextLine());
+		textField_3.setText(networkInput.nextLine());
+		textField_4.setText(networkInput.nextLine());
+		btnStartTournament.setEnabled(true);
+		
 		//this is the loop until the end of the game
 		while(true) {
 			//this waits until a button is pressed
 			if(end==1) {
-				networkOutput.println(5);
+				
 				if(win==1) {
 					txtpnThe.setText("You Win");
 				}
@@ -146,8 +176,9 @@ public class ClientGUI {
 				}
 				break;
 			}
-			if(NetCount==1){
+			if(NetCount==1){//if it is the game proper
 				networkOutput.println(2);
+				networkOutput.println(uid/2);
 				//old position of the enemy
 				int oop= Integer.parseInt(networkInput.nextLine());
 				//Gets the new position of the enemy
@@ -167,7 +198,7 @@ public class ClientGUI {
 				txtpnThe.setText("Your Turn");
 				
 			}
-			while(waiter==true) {
+			while(waiter==true) {//this waits till a button is pressed
 				//this just uses try catch to be able to use sleep which waits every one second
 				try {
 					Thread.sleep(1000);
@@ -175,7 +206,7 @@ public class ClientGUI {
 					e.printStackTrace();
 				}
 			}
-			for(int i1=0; i1<8; i1++) { 
+			for(int i1=0; i1<8; i1++) { //this resets to waiting phase
 				for(int j1=0; j1<9; j1++) {
 					list[i1][j1].setEnabled(false);
 					list[i1][j1].setBackground(new Color(139, 69, 19));
@@ -183,10 +214,10 @@ public class ClientGUI {
 				}
 			}
 			//this is for when the pieces are being laid out
-			if(NetCount==0) {
+			if(NetCount==0) {//if the pieces are being placed
 				//this signals that the board i being set up
 				if(end==1) {
-					networkOutput.println(5);
+					
 					if(win==1) {
 						txtpnThe.setText("You Win");
 					}
@@ -196,7 +227,8 @@ public class ClientGUI {
 					break;
 				}
 				networkOutput.println("1");
-				
+				networkOutput.println(uid/2);
+				System.out.println(uid/2);
 				//this part is the one that sends the array which contains the positions in the board
 				try {
 					outToServer.writeObject(boardLook);
@@ -222,13 +254,21 @@ public class ClientGUI {
 				NetCount++;
 				if(turn==1) {
 					networkOutput.println("4");
+					networkOutput.println(uid/2);
 					networkInput.nextLine();
+				}
+				try {
+					outToServer.flush();
+					
+				} catch (IOException e) {
+					
+					e.printStackTrace();
 				}
 			}
 			//this is for when the player is already moving
-			else if(NetCount==1){
-				System.out.print("q");
-				//tells the next movement
+			else if(NetCount==1){//if Game proper 
+				
+				//tells if someone already won
 				if(end==1) {
 					if(win==1) {
 						txtpnThe.setText("You Win");
@@ -243,8 +283,27 @@ public class ClientGUI {
 				networkOutput.println(sop);
 				//this gets the old position of the enemy 
 				networkOutput.println(Integer.toString(end));
-				
+				networkOutput.println(Integer.toString(win));
+				if(end==1) {
+					break;
+				}
+				int echeck=0;
+				if(end==1) {
+					echeck=1;
+				}
 				end=Integer.parseInt(networkInput.nextLine());
+				if(end==1 && echeck==0) {
+					int winner=Integer.parseInt(networkInput.nextLine());
+					if(winner==1) {
+						win=0;
+					}else {
+						win=1;
+					}
+						
+				}
+				else {
+					networkInput.nextLine();
+				}
 			}
 			//allows the waiting till a button is pressed
 			waiter=true;
@@ -260,6 +319,8 @@ public class ClientGUI {
 			
 			
 		}
+		
+		
 		/////////////////////////////////////////////////////////////////////////////
 	}
 	////starts the Initialization of the GUI will allow choosing which window to lunch
@@ -268,6 +329,7 @@ public class ClientGUI {
 		initialize();
 		//the game window
 		initialize2();
+		initialize3();
 	}
 	//this part is the one that allows the placement of the items into the board
 	private void boardSetting() {
@@ -305,19 +367,20 @@ public class ClientGUI {
 		frmGameOfThe.getContentPane().add(txtEnterHostName);
 		txtEnterHostName.setColumns(10);
 		
-		textField = new JTextField();
-		textField.setHorizontalAlignment(SwingConstants.CENTER);
-		textField.setText("1234");
-		textField.setBounds(148, 190, 191, 30);
-		frmGameOfThe.getContentPane().add(textField);
-		textField.setColumns(10);
+		txtPlayer = new JTextField();
+		txtPlayer.setHorizontalAlignment(SwingConstants.CENTER);
+		txtPlayer.setText("Player");
+		txtPlayer.setBounds(148, 190, 263, 30);
+		frmGameOfThe.getContentPane().add(txtPlayer);
+		txtPlayer.setColumns(10);
 		
 		
 		Connect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				uname=txtPlayer.getText();
 				try {
 					host=InetAddress.getByName(txtEnterHostName.getText());
-					PORT= Integer.parseInt(textField.getText());
+					PORT= 1234;
 					socket = new Socket(host,PORT);
 					
 				} catch (IOException e1) {
@@ -330,19 +393,21 @@ public class ClientGUI {
 					outToServer = new ObjectOutputStream(socket.getOutputStream());
 					inFromServer = new ObjectInputStream(socket.getInputStream());
 					networkOutput.println("3");
+					networkOutput.println(uid/2);
 					Integer.parseInt(networkInput.nextLine());
-					window.frame.setVisible(true);
+					window.frame3.setVisible(true);
 					window.frmGameOfThe.setVisible(false);
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
+				waiter=false;
 			}
 		});
 		Connect.setBounds(204, 231, 89, 23);
 		frmGameOfThe.getContentPane().add(Connect);
 		
 		
-		lblPortNumber = new JLabel("PORT NUMBER:");
+		lblPortNumber = new JLabel("User  Name:");
 		lblPortNumber.setBounds(72, 196, 78, 14);
 		frmGameOfThe.getContentPane().add(lblPortNumber);
 	}
@@ -433,6 +498,11 @@ public class ClientGUI {
 				}
 				//if those do not hold then the piece loses
 				else {
+					if(boardLook[7-ppr][8-ppc]==30) {
+						end=1;
+						win=0;
+					}
+				
 					boardLook[7-ppr][8-ppc]=0;
 					sop=((7-ppr)*9)+(8-ppc);
 					snp=sop;
@@ -449,6 +519,10 @@ public class ClientGUI {
 					snp=((7-a)*9)+(8-b);
 					sop=((7-ppr)*9)+(8-ppc);
 				}else {
+					if(boardLook[7-ppr][8-ppc]==30) {
+						end=1;
+						win=0;
+					}
 					boardLook[7-ppr][8-ppc]=0;
 					sop=((7-ppr)*9)+(8-ppc);
 					snp=sop;
@@ -465,6 +539,10 @@ public class ClientGUI {
 					snp=((7-a)*9)+(8-b);
 					sop=((7-ppr)*9)+(8-ppc);
 				}else {
+					if(boardLook[7-ppr][8-ppc]==30) {
+						end=1;
+						win=0;
+					}
 					boardLook[7-ppr][8-ppc]=0;
 					sop=((7-ppr)*9)+(8-ppc);
 					snp=sop;
@@ -493,6 +571,10 @@ public class ClientGUI {
 					sop=ppr*9+ppc;
 				}
 				else {
+					if(boardLook[ppr][ppc]==15) {
+						end=1;
+						win=0;
+					}
 					boardLook[ppr][ppc]=0;
 					sop=ppr*9+ppc;
 					snp=sop;
@@ -509,6 +591,10 @@ public class ClientGUI {
 					snp=a*9+b;
 					sop=ppr*9+ppc;
 				}else {
+					if(boardLook[ppr][ppc]==15) {
+						end=1;
+						win=0;
+					}
 					boardLook[ppr][ppc]=0;
 					sop=ppr*9+ppc;
 					snp=sop;
@@ -525,6 +611,10 @@ public class ClientGUI {
 					snp=a*9+b;
 					sop=ppr*9+ppc;
 				}else {
+					if(boardLook[ppr][ppc]==15) {
+						end=1;
+						win=0;
+					}
 					boardLook[ppr][ppc]=0;
 					sop=ppr*9+ppc;
 					snp=sop;
@@ -675,446 +765,448 @@ public class ClientGUI {
 	//this initializes the board and makes use of mnm
 	private void initialize2() {
 		//This is the initiation of where the other components go into
-		frame = new JFrame();
-		frame.getContentPane().setFont(new Font("Stencil", Font.PLAIN, 18));
-		frame.getContentPane().setBackground(Color.LIGHT_GRAY);
-		frame.setBounds(100, 100, 914, 635);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.getContentPane().setLayout(null);
+		frmGameBoard = new JFrame();
+		frmGameBoard.setTitle("Game of the Generals - Board");
+		frmGameBoard.setIconImage(Toolkit.getDefaultToolkit().getImage(ClientGUI.class.getResource("/img/5star.png")));
+		frmGameBoard.getContentPane().setFont(new Font("Stencil", Font.PLAIN, 18));
+		frmGameBoard.getContentPane().setBackground(Color.LIGHT_GRAY);
+		frmGameBoard.setBounds(100, 100, 914, 635);
+		frmGameBoard.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frmGameBoard.getContentPane().setLayout(null);
 		
 		//this creates the buttons for the board
 		JButton grid1_1 = new JButton("");
 		grid1_1.setIcon(null);
 		grid1_1.setBackground(new Color(139, 69, 19));	
 		grid1_1.setBounds(60, 55, 60, 60);
-		frame.getContentPane().add(grid1_1);
+		frmGameBoard.getContentPane().add(grid1_1);
 		
 		JButton grid1_2 = new JButton("");
 		grid1_2.setIcon(null);
 		grid1_2.setBackground(new Color(139, 69, 19));
 		grid1_2.setBounds(119, 55, 60, 60);
-		frame.getContentPane().add(grid1_2);
+		frmGameBoard.getContentPane().add(grid1_2);
 			
 		
 		JButton grid1_3 = new JButton("");
 		grid1_3.setIcon(null);
 		grid1_3.setBackground(new Color(139, 69, 19));
 		grid1_3.setBounds(178, 55, 60, 60);
-		frame.getContentPane().add(grid1_3);
+		frmGameBoard.getContentPane().add(grid1_3);
 		
 		JButton grid1_4 = new JButton("");
 		grid1_4.setIcon(null);
 		grid1_4.setBackground(new Color(139, 69, 19));
 		grid1_4.setBounds(237, 55, 60, 60);
-		frame.getContentPane().add(grid1_4);
+		frmGameBoard.getContentPane().add(grid1_4);
 		
 		JButton grid1_5 = new JButton("");
 		grid1_5.setIcon(null);
 		grid1_5.setBackground(new Color(139, 69, 19));
 		grid1_5.setBounds(296, 55, 60, 60);
-		frame.getContentPane().add(grid1_5);
+		frmGameBoard.getContentPane().add(grid1_5);
 		
 		JButton grid1_6 = new JButton("");
 		grid1_6.setIcon(null);
 		grid1_6.setBackground(new Color(139, 69, 19));
 		grid1_6.setBounds(355, 55, 60, 60);
-		frame.getContentPane().add(grid1_6);
+		frmGameBoard.getContentPane().add(grid1_6);
 		
 		JButton grid1_7 = new JButton("");
 		grid1_7.setIcon(null);
 		grid1_7.setBackground(new Color(139, 69, 19));
 		grid1_7.setBounds(414, 55, 60, 60);
-		frame.getContentPane().add(grid1_7);
+		frmGameBoard.getContentPane().add(grid1_7);
 		
 		JButton grid1_8 = new JButton("");
 		grid1_8.setIcon(null);
 		grid1_8.setBackground(new Color(139, 69, 19));
 		grid1_8.setBounds(473, 55, 60, 60);
-		frame.getContentPane().add(grid1_8);
+		frmGameBoard.getContentPane().add(grid1_8);
 		
 		JButton grid1_9 = new JButton("");
 		grid1_9.setIcon(null);
 		grid1_9.setBackground(new Color(139, 69, 19));
 		grid1_9.setBounds(531, 55, 60, 60);
-		frame.getContentPane().add(grid1_9);
+		frmGameBoard.getContentPane().add(grid1_9);
 		
 		JButton grid2_1 = new JButton("");
 		grid2_1.setIcon(null);
 		grid2_1.setBackground(new Color(139, 69, 19));
 		grid2_1.setBounds(60, 115, 60, 60);
-		frame.getContentPane().add(grid2_1);
+		frmGameBoard.getContentPane().add(grid2_1);
 		
 		JButton grid2_2 = new JButton("");
 		grid2_2.setIcon(null);
 		grid2_2.setBackground(new Color(139, 69, 19));
 		grid2_2.setBounds(119, 115, 60, 60);
-		frame.getContentPane().add(grid2_2);
+		frmGameBoard.getContentPane().add(grid2_2);
 		
 		JButton grid2_3 = new JButton("");
 		grid2_3.setIcon(null);
 		grid2_3.setBackground(new Color(139, 69, 19));
 		grid2_3.setBounds(178, 115, 60, 60);
-		frame.getContentPane().add(grid2_3);
+		frmGameBoard.getContentPane().add(grid2_3);
 		
 		JButton grid2_4 = new JButton("");
 		grid2_4.setIcon(null);
 		grid2_4.setBackground(new Color(139, 69, 19));
 		grid2_4.setBounds(237, 115, 60, 60);
-		frame.getContentPane().add(grid2_4);
+		frmGameBoard.getContentPane().add(grid2_4);
 		
 		JButton grid2_5 = new JButton("");
 		grid2_5.setIcon(null);
 		grid2_5.setBackground(new Color(139, 69, 19));
 		grid2_5.setBounds(296, 115, 60, 60);
-		frame.getContentPane().add(grid2_5);
+		frmGameBoard.getContentPane().add(grid2_5);
 		
 		JButton grid2_6 = new JButton("");
 		grid2_6.setIcon(null);
 		grid2_6.setBackground(new Color(139, 69, 19));
 		grid2_6.setBounds(355, 115, 60, 60);
-		frame.getContentPane().add(grid2_6);
+		frmGameBoard.getContentPane().add(grid2_6);
 		
 		JButton grid2_7 = new JButton("");
 		grid2_7.setIcon(null);
 		grid2_7.setBackground(new Color(139, 69, 19));
 		grid2_7.setBounds(414, 115, 60, 60);
-		frame.getContentPane().add(grid2_7);
+		frmGameBoard.getContentPane().add(grid2_7);
 		
 		JButton grid2_8 = new JButton("");
 		grid2_8.setIcon(null);
 		grid2_8.setBackground(new Color(139, 69, 19));
 		grid2_8.setBounds(473, 115, 60, 60);
-		frame.getContentPane().add(grid2_8);
+		frmGameBoard.getContentPane().add(grid2_8);
 		
 		JButton grid2_9 = new JButton("");
 		grid2_9.setIcon(null);
 		grid2_9.setBackground(new Color(139, 69, 19));
 		grid2_9.setBounds(531, 115, 60, 60);
-		frame.getContentPane().add(grid2_9);
+		frmGameBoard.getContentPane().add(grid2_9);
 		
 		JButton grid3_1 = new JButton("");
 		grid3_1.setIcon(null);
 		grid3_1.setBackground(new Color(139, 69, 19));
 		grid3_1.setBounds(60, 173, 60, 60);
-		frame.getContentPane().add(grid3_1);
+		frmGameBoard.getContentPane().add(grid3_1);
 		
 		JButton grid3_2 = new JButton("");
 		grid3_2.setIcon(null);
 		grid3_2.setBackground(new Color(139, 69, 19));
 		grid3_2.setBounds(119, 173, 60, 60);
-		frame.getContentPane().add(grid3_2);
+		frmGameBoard.getContentPane().add(grid3_2);
 		
 		JButton grid3_3 = new JButton("");
 		grid3_3.setIcon(null);
 		grid3_3.setBackground(new Color(139, 69, 19));
 		grid3_3.setBounds(178, 173, 60, 60);
-		frame.getContentPane().add(grid3_3);
+		frmGameBoard.getContentPane().add(grid3_3);
 		
 		JButton grid3_4 = new JButton("");
 		grid3_4.setIcon(null);
 		grid3_4.setBackground(new Color(139, 69, 19));
 		grid3_4.setBounds(237, 173, 60, 60);
-		frame.getContentPane().add(grid3_4);
+		frmGameBoard.getContentPane().add(grid3_4);
 		
 		JButton grid3_5 = new JButton("");
 		grid3_5.setIcon(null);
 		grid3_5.setBackground(new Color(139, 69, 19));
 		grid3_5.setBounds(296, 173, 60, 60);
-		frame.getContentPane().add(grid3_5);
+		frmGameBoard.getContentPane().add(grid3_5);
 		
 		JButton grid3_6 = new JButton("");
 		grid3_6.setIcon(null);
 		grid3_6.setBackground(new Color(139, 69, 19));
 		grid3_6.setBounds(355, 173, 60, 60);
-		frame.getContentPane().add(grid3_6);
+		frmGameBoard.getContentPane().add(grid3_6);
 		
 		JButton grid3_7 = new JButton("");
 		grid3_7.setIcon(null);
 		grid3_7.setBackground(new Color(139, 69, 19));
 		grid3_7.setBounds(414, 173, 60, 60);
-		frame.getContentPane().add(grid3_7);
+		frmGameBoard.getContentPane().add(grid3_7);
 		
 		JButton grid3_8 = new JButton("");
 		grid3_8.setIcon(null);
 		grid3_8.setBackground(new Color(139, 69, 19));
 		grid3_8.setBounds(473, 173, 60, 60);
-		frame.getContentPane().add(grid3_8);
+		frmGameBoard.getContentPane().add(grid3_8);
 		
 		JButton grid3_9 = new JButton("");
 		grid3_9.setIcon(null);
 		grid3_9.setBackground(new Color(139, 69, 19));
 		grid3_9.setBounds(531, 173, 60, 60);
-		frame.getContentPane().add(grid3_9);
+		frmGameBoard.getContentPane().add(grid3_9);
 		
 		JButton grid4_1 = new JButton("");
 		grid4_1.setIcon(null);
 		grid4_1.setBackground(new Color(139, 69, 19));
 		grid4_1.setBounds(60, 233, 60, 60);
-		frame.getContentPane().add(grid4_1);
+		frmGameBoard.getContentPane().add(grid4_1);
 		
 		JButton grid4_2 = new JButton("");
 		grid4_2.setIcon(null);
 		grid4_2.setBackground(new Color(139, 69, 19));
 		grid4_2.setBounds(119, 233, 60, 60);
-		frame.getContentPane().add(grid4_2);
+		frmGameBoard.getContentPane().add(grid4_2);
 		
 		JButton grid4_3 = new JButton("");
 		grid4_3.setIcon(null);
 		grid4_3.setBackground(new Color(139, 69, 19));
 		grid4_3.setBounds(178, 233, 60, 60);
-		frame.getContentPane().add(grid4_3);
+		frmGameBoard.getContentPane().add(grid4_3);
 		
 		JButton grid4_4 = new JButton("");
 		grid4_4.setIcon(null);
 		grid4_4.setBackground(new Color(139, 69, 19));
 		grid4_4.setBounds(237, 233, 60, 60);
-		frame.getContentPane().add(grid4_4);
+		frmGameBoard.getContentPane().add(grid4_4);
 		
 		JButton grid4_5 = new JButton("");
 		grid4_5.setIcon(null);
 		grid4_5.setBackground(new Color(139, 69, 19));
 		grid4_5.setBounds(296, 233, 60, 60);
-		frame.getContentPane().add(grid4_5);
+		frmGameBoard.getContentPane().add(grid4_5);
 		
 		JButton grid4_6 = new JButton("");
 		grid4_6.setIcon(null);
 		grid4_6.setBackground(new Color(139, 69, 19));
 		grid4_6.setBounds(355, 233, 60, 60);
-		frame.getContentPane().add(grid4_6);
+		frmGameBoard.getContentPane().add(grid4_6);
 		
 		JButton grid4_7 = new JButton("");
 		grid4_7.setIcon(null);
 		grid4_7.setBackground(new Color(139, 69, 19));
 		grid4_7.setBounds(414, 233, 60, 60);
-		frame.getContentPane().add(grid4_7);
+		frmGameBoard.getContentPane().add(grid4_7);
 		
 		JButton grid4_8 = new JButton("");
 		grid4_8.setIcon(null);
 		grid4_8.setBackground(new Color(139, 69, 19));
 		grid4_8.setBounds(473, 233, 60, 60);
-		frame.getContentPane().add(grid4_8);
+		frmGameBoard.getContentPane().add(grid4_8);
 		
 		JButton grid4_9 = new JButton("");
 		grid4_9.setIcon(null);
 		grid4_9.setBackground(new Color(139, 69, 19));
 		grid4_9.setBounds(531, 233, 60, 60);
-		frame.getContentPane().add(grid4_9);
+		frmGameBoard.getContentPane().add(grid4_9);
 		
 		JButton grid5_1 = new JButton("");
 		grid5_1.setIcon(null);
 		grid5_1.setBackground(new Color(139, 69, 19));
 		grid5_1.setBounds(60, 293, 60, 60);
-		frame.getContentPane().add(grid5_1);
+		frmGameBoard.getContentPane().add(grid5_1);
 		
 		JButton grid5_2 = new JButton("");
 		grid5_2.setIcon(null);
 		grid5_2.setBackground(new Color(139, 69, 19));
 		grid5_2.setBounds(119, 293, 60, 60);
-		frame.getContentPane().add(grid5_2);
+		frmGameBoard.getContentPane().add(grid5_2);
 		
 		JButton grid5_3 = new JButton("");
 		grid5_3.setIcon(null);
 		grid5_3.setBackground(new Color(139, 69, 19));
 		grid5_3.setBounds(178, 293, 60, 60);
-		frame.getContentPane().add(grid5_3);
+		frmGameBoard.getContentPane().add(grid5_3);
 		
 		JButton grid5_4 = new JButton("");
 		grid5_4.setIcon(null);
 		grid5_4.setBackground(new Color(139, 69, 19));
 		grid5_4.setBounds(237, 293, 60, 60);
-		frame.getContentPane().add(grid5_4);
+		frmGameBoard.getContentPane().add(grid5_4);
 		
 		JButton grid5_5 = new JButton("");
 		grid5_5.setIcon(null);
 		grid5_5.setBackground(new Color(139, 69, 19));
 		grid5_5.setBounds(296, 293, 60, 60);
-		frame.getContentPane().add(grid5_5);
+		frmGameBoard.getContentPane().add(grid5_5);
 		
 		JButton grid5_6 = new JButton("");
 		grid5_6.setIcon(null);
 		grid5_6.setBackground(new Color(139, 69, 19));
 		grid5_6.setBounds(355, 293, 60, 60);
-		frame.getContentPane().add(grid5_6);
+		frmGameBoard.getContentPane().add(grid5_6);
 		
 		JButton grid5_7 = new JButton("");
 		grid5_7.setIcon(null);
 		grid5_7.setBackground(new Color(139, 69, 19));
 		grid5_7.setBounds(414, 293, 60, 60);
-		frame.getContentPane().add(grid5_7);
+		frmGameBoard.getContentPane().add(grid5_7);
 		
 		JButton grid5_8 = new JButton("");
 		grid5_8.setIcon(null);
 		grid5_8.setBackground(new Color(139, 69, 19));
 		grid5_8.setBounds(473, 293, 60, 60);
-		frame.getContentPane().add(grid5_8);
+		frmGameBoard.getContentPane().add(grid5_8);
 		
 		JButton grid5_9 = new JButton("");
 		grid5_9.setIcon(null);
 		grid5_9.setBackground(new Color(139, 69, 19));
 		grid5_9.setBounds(531, 293, 60, 60);
-		frame.getContentPane().add(grid5_9);
+		frmGameBoard.getContentPane().add(grid5_9);
 		
 		JButton grid6_1 = new JButton("");
 		grid6_1.setIcon(null);
 		grid6_1.setBackground(new Color(139, 69, 19));
 		grid6_1.setBounds(60, 353, 60, 60);
-		frame.getContentPane().add(grid6_1);
+		frmGameBoard.getContentPane().add(grid6_1);
 		
 		JButton grid6_2 = new JButton("");
 		grid6_2.setIcon(null);
 		grid6_2.setBackground(new Color(139, 69, 19));
 		grid6_2.setBounds(119, 353, 60, 60);
-		frame.getContentPane().add(grid6_2);
+		frmGameBoard.getContentPane().add(grid6_2);
 		
 		JButton grid6_3 = new JButton("");
 		grid6_3.setIcon(null);
 		grid6_3.setBackground(new Color(139, 69, 19));
 		grid6_3.setBounds(178, 353, 60, 60);
-		frame.getContentPane().add(grid6_3);
+		frmGameBoard.getContentPane().add(grid6_3);
 		
 		JButton grid6_4 = new JButton("");
 		grid6_4.setIcon(null);
 		grid6_4.setBackground(new Color(139, 69, 19));
 		grid6_4.setBounds(237, 353, 60, 60);
-		frame.getContentPane().add(grid6_4);
+		frmGameBoard.getContentPane().add(grid6_4);
 		
 		JButton grid6_5 = new JButton("");
 		grid6_5.setIcon(null);
 		grid6_5.setBackground(new Color(139, 69, 19));
 		grid6_5.setBounds(296, 353, 60, 60);
-		frame.getContentPane().add(grid6_5);
+		frmGameBoard.getContentPane().add(grid6_5);
 		
 		JButton grid6_6 = new JButton("");
 		grid6_6.setIcon(null);
 		grid6_6.setBackground(new Color(139, 69, 19));
 		grid6_6.setBounds(355, 353, 60, 60);
-		frame.getContentPane().add(grid6_6);
+		frmGameBoard.getContentPane().add(grid6_6);
 		
 		JButton grid6_7 = new JButton("");
 		grid6_7.setIcon(null);
 		grid6_7.setBackground(new Color(139, 69, 19));
 		grid6_7.setBounds(414, 353, 60, 60);
-		frame.getContentPane().add(grid6_7);
+		frmGameBoard.getContentPane().add(grid6_7);
 		
 		JButton grid6_8 = new JButton("");
 		grid6_8.setIcon(null);
 		grid6_8.setBackground(new Color(139, 69, 19));
 		grid6_8.setBounds(473, 353, 60, 60);
-		frame.getContentPane().add(grid6_8);
+		frmGameBoard.getContentPane().add(grid6_8);
 		
 		JButton grid6_9 = new JButton("");
 		grid6_9.setIcon(null);
 		grid6_9.setBackground(new Color(139, 69, 19));
 		grid6_9.setBounds(531, 353, 60, 60);
-		frame.getContentPane().add(grid6_9);
+		frmGameBoard.getContentPane().add(grid6_9);
 		
 		JButton grid7_1 = new JButton("");
 		grid7_1.setIcon(null);
 		grid7_1.setBackground(new Color(139, 69, 19));
 		grid7_1.setBounds(60, 411, 60, 60);
-		frame.getContentPane().add(grid7_1);
+		frmGameBoard.getContentPane().add(grid7_1);
 		
 		JButton grid7_2 = new JButton("");
 		grid7_2.setIcon(null);
 		grid7_2.setBackground(new Color(139, 69, 19));
 		grid7_2.setBounds(119, 411, 60, 60);
-		frame.getContentPane().add(grid7_2);
+		frmGameBoard.getContentPane().add(grid7_2);
 		
 		JButton grid7_3 = new JButton("");
 		grid7_3.setIcon(null);
 		grid7_3.setBackground(new Color(139, 69, 19));
 		grid7_3.setBounds(178, 411, 60, 60);
-		frame.getContentPane().add(grid7_3);
+		frmGameBoard.getContentPane().add(grid7_3);
 		
 		JButton grid7_4 = new JButton("");
 		grid7_4.setIcon(null);
 		grid7_4.setBackground(new Color(139, 69, 19));
 		grid7_4.setBounds(237, 411, 60, 60);
-		frame.getContentPane().add(grid7_4);
+		frmGameBoard.getContentPane().add(grid7_4);
 		
 		JButton grid7_5 = new JButton("");
 		grid7_5.setIcon(null);
 		grid7_5.setBackground(new Color(139, 69, 19));
 		grid7_5.setBounds(296, 411, 60, 60);
-		frame.getContentPane().add(grid7_5);
+		frmGameBoard.getContentPane().add(grid7_5);
 		
 		JButton grid7_6 = new JButton("");
 		grid7_6.setIcon(null);
 		grid7_6.setBackground(new Color(139, 69, 19));
 		grid7_6.setBounds(355, 411, 60, 60);
-		frame.getContentPane().add(grid7_6);
+		frmGameBoard.getContentPane().add(grid7_6);
 		
 		JButton grid7_7 = new JButton("");
 		grid7_7.setIcon(null);
 		grid7_7.setBackground(new Color(139, 69, 19));
 		grid7_7.setBounds(414, 411, 60, 60);
-		frame.getContentPane().add(grid7_7);
+		frmGameBoard.getContentPane().add(grid7_7);
 		
 		JButton grid7_8 = new JButton("");
 		grid7_8.setIcon(null);
 		grid7_8.setBackground(new Color(139, 69, 19));
 		grid7_8.setBounds(473, 411, 60, 60);
-		frame.getContentPane().add(grid7_8);
+		frmGameBoard.getContentPane().add(grid7_8);
 		
 		JButton grid7_9 = new JButton("");
 		grid7_9.setIcon(null);
 		grid7_9.setBackground(new Color(139, 69, 19));
 		grid7_9.setBounds(531, 411, 60, 60);
-		frame.getContentPane().add(grid7_9);
+		frmGameBoard.getContentPane().add(grid7_9);
 		
 		JButton grid8_1 = new JButton("");
 		grid8_1.setIcon(null);
 		grid8_1.setBackground(new Color(139, 69, 19));
 		grid8_1.setBounds(60, 471, 60, 60);
-		frame.getContentPane().add(grid8_1);
+		frmGameBoard.getContentPane().add(grid8_1);
 		
 		JButton grid8_2 = new JButton("");
 		grid8_2.setIcon(null);
 		grid8_2.setBackground(new Color(139, 69, 19));
 		grid8_2.setBounds(119, 471, 60, 60);
-		frame.getContentPane().add(grid8_2);
+		frmGameBoard.getContentPane().add(grid8_2);
 		
 		JButton grid8_3 = new JButton("");
 		grid8_3.setIcon(null);
 		grid8_3.setBackground(new Color(139, 69, 19));
 		grid8_3.setBounds(178, 471, 60, 60);
-		frame.getContentPane().add(grid8_3);
+		frmGameBoard.getContentPane().add(grid8_3);
 		
 		JButton grid8_4 = new JButton("");
 		grid8_4.setIcon(null);
 		grid8_4.setBackground(new Color(139, 69, 19));
 		grid8_4.setBounds(237, 471, 60, 60);
-		frame.getContentPane().add(grid8_4);
+		frmGameBoard.getContentPane().add(grid8_4);
 		
 		JButton grid8_5 = new JButton("");
 		grid8_5.setIcon(null);
 		grid8_5.setBackground(new Color(139, 69, 19));
 		grid8_5.setBounds(296, 471, 60, 60);
-		frame.getContentPane().add(grid8_5);
+		frmGameBoard.getContentPane().add(grid8_5);
 		
 		JButton grid8_6 = new JButton("");
 		grid8_6.setIcon(null);
 		grid8_6.setBackground(new Color(139, 69, 19));
 		grid8_6.setBounds(355, 471, 60, 60);
-		frame.getContentPane().add(grid8_6);
+		frmGameBoard.getContentPane().add(grid8_6);
 		
 		JButton grid8_7 = new JButton("");
 		grid8_7.setIcon(null);
 		grid8_7.setBackground(new Color(139, 69, 19));
 		grid8_7.setBounds(414, 471, 60, 60);
-		frame.getContentPane().add(grid8_7);
+		frmGameBoard.getContentPane().add(grid8_7);
 		
 		JButton grid8_8 = new JButton("");
 		grid8_8.setIcon(null);
 		grid8_8.setBackground(new Color(139, 69, 19));
 		grid8_8.setBounds(473, 471, 60, 60);
-		frame.getContentPane().add(grid8_8);
+		frmGameBoard.getContentPane().add(grid8_8);
 		
 		JButton grid8_9 = new JButton("");
 		grid8_9.setIcon(null);
 		grid8_9.setBackground(new Color(139, 69, 19));
 		grid8_9.setBounds(531, 471, 60, 60);
-		frame.getContentPane().add(grid8_9);
+		frmGameBoard.getContentPane().add(grid8_9);
 		
 		//this places the buttons in an array
 		list = new JButton[8][9];
@@ -1196,16 +1288,16 @@ public class ClientGUI {
 		setPiece = new JButton("set");
 		setPiece.setFont(new Font("Stencil", Font.PLAIN, 20));
 		setPiece.setBackground(new Color(50, 205, 50));
-		setPiece.setBounds(701, 528, 152, 43);
-		frame.getContentPane().add(setPiece);
+		setPiece.setBounds(667, 448, 152, 43);
+		frmGameBoard.getContentPane().add(setPiece);
 		
 		
 		//this is what prints out the instructions and what is happening in-game
 		txtpnThe = new JTextPane();
 		txtpnThe.setEditable(false);
 		txtpnThe.setText("Click Set \n and \n Place Your Pieces \n First to Place is the 5 Star General \n The pieces can only be placed in the bottom 3 rows");
-		txtpnThe.setBounds(668, 86, 180, 203);
-		frame.getContentPane().add(txtpnThe);
+		txtpnThe.setBounds(657, 90, 180, 203);
+		frmGameBoard.getContentPane().add(txtpnThe);
 		
 		
 		///////////////////////////////////////
@@ -1214,94 +1306,100 @@ public class ClientGUI {
 		JLabel lblA = new JLabel("A");
 		lblA.setFont(new Font("Tahoma", Font.BOLD, 25));
 		lblA.setBounds(79, 21, 31, 33);
-		frame.getContentPane().add(lblA);
+		frmGameBoard.getContentPane().add(lblA);
 		
 		JLabel lblB = new JLabel("B");
 		lblB.setFont(new Font("Tahoma", Font.BOLD, 25));
 		lblB.setBounds(138, 21, 31, 33);
-		frame.getContentPane().add(lblB);
+		frmGameBoard.getContentPane().add(lblB);
 		
 		JLabel lblD = new JLabel("D");
 		lblD.setFont(new Font("Tahoma", Font.BOLD, 25));
 		lblD.setBounds(257, 21, 31, 33);
-		frame.getContentPane().add(lblD);
+		frmGameBoard.getContentPane().add(lblD);
 		
 		JLabel lblC = new JLabel("C");
 		lblC.setFont(new Font("Tahoma", Font.BOLD, 25));
 		lblC.setBounds(198, 21, 31, 33);
-		frame.getContentPane().add(lblC);
+		frmGameBoard.getContentPane().add(lblC);
 		
 		JLabel lblF = new JLabel("F");
 		lblF.setFont(new Font("Tahoma", Font.BOLD, 25));
 		lblF.setBounds(377, 21, 31, 33);
-		frame.getContentPane().add(lblF);
+		frmGameBoard.getContentPane().add(lblF);
 		
 		JLabel lblE = new JLabel("E");
 		lblE.setFont(new Font("Tahoma", Font.BOLD, 25));
 		lblE.setBounds(313, 21, 31, 33);
-		frame.getContentPane().add(lblE);
+		frmGameBoard.getContentPane().add(lblE);
 		
 		JLabel lblH = new JLabel("H");
 		lblH.setFont(new Font("Tahoma", Font.BOLD, 25));
 		lblH.setBounds(488, 21, 31, 33);
-		frame.getContentPane().add(lblH);
+		frmGameBoard.getContentPane().add(lblH);
 		
 		JLabel lblG = new JLabel("G");
 		lblG.setFont(new Font("Tahoma", Font.BOLD, 25));
 		lblG.setBounds(431, 21, 31, 33);
-		frame.getContentPane().add(lblG);
+		frmGameBoard.getContentPane().add(lblG);
 		
 		JLabel lblI = new JLabel("I");
 		lblI.setFont(new Font("Tahoma", Font.BOLD, 25));
 		lblI.setBounds(553, 21, 31, 33);
-		frame.getContentPane().add(lblI);
+		frmGameBoard.getContentPane().add(lblI);
 		
 		JLabel label = new JLabel("1");
 		label.setFont(new Font("Tahoma", Font.BOLD, 25));
 		label.setBounds(24, 66, 31, 33);
-		frame.getContentPane().add(label);
+		frmGameBoard.getContentPane().add(label);
 		
 		JLabel label_1 = new JLabel("2");
 		label_1.setFont(new Font("Tahoma", Font.BOLD, 25));
 		label_1.setBounds(24, 126, 31, 33);
-		frame.getContentPane().add(label_1);
+		frmGameBoard.getContentPane().add(label_1);
 		
 		JLabel label_2 = new JLabel("3");
 		label_2.setFont(new Font("Tahoma", Font.BOLD, 25));
 		label_2.setBounds(24, 188, 31, 33);
-		frame.getContentPane().add(label_2);
+		frmGameBoard.getContentPane().add(label_2);
 		
 		JLabel label_3 = new JLabel("4");
 		label_3.setFont(new Font("Tahoma", Font.BOLD, 25));
 		label_3.setBounds(24, 248, 31, 33);
-		frame.getContentPane().add(label_3);
+		frmGameBoard.getContentPane().add(label_3);
 		
 		JLabel label_4 = new JLabel("5");
 		label_4.setFont(new Font("Tahoma", Font.BOLD, 25));
 		label_4.setBounds(24, 308, 31, 33);
-		frame.getContentPane().add(label_4);
+		frmGameBoard.getContentPane().add(label_4);
 		
 		JLabel label_5 = new JLabel("6");
 		label_5.setFont(new Font("Tahoma", Font.BOLD, 25));
 		label_5.setBounds(24, 368, 31, 33);
-		frame.getContentPane().add(label_5);
+		frmGameBoard.getContentPane().add(label_5);
 		
 		JLabel label_6 = new JLabel("7");
 		label_6.setFont(new Font("Tahoma", Font.BOLD, 25));
 		label_6.setBounds(24, 424, 31, 33);
-		frame.getContentPane().add(label_6);
+		frmGameBoard.getContentPane().add(label_6);
 		
 		JLabel label_7 = new JLabel("8");
 		label_7.setFont(new Font("Tahoma", Font.BOLD, 25));
 		label_7.setBounds(24, 484, 31, 33);
-		frame.getContentPane().add(label_7);
+		frmGameBoard.getContentPane().add(label_7);
 		
 		JLabel lblGame = new JLabel("Game");
 		lblGame.setForeground(new Color(255, 0, 0));
 		lblGame.setFont(new Font("Stencil", Font.PLAIN, 20));
 		lblGame.setBackground(new Color(160, 82, 45));
 		lblGame.setBounds(722, 66, 82, 20);
-		frame.getContentPane().add(lblGame);
+		frmGameBoard.getContentPane().add(lblGame);
+		
+		Button button = new Button("?");
+		button.setBackground(Color.GREEN);
+		button.setFont(new Font("Dubai", Font.BOLD, 28));
+		button.setBounds(839, 10, 49, 48);
+		frmGameBoard.getContentPane().add(button);
 		
 		/**
 		 * JButton btnResign = new JButton("RESIGN");
@@ -1372,5 +1470,70 @@ public class ClientGUI {
 		
 		//////////////////////////////////////////////////
 	}
-
+	private void initialize3() {
+		frame3 = new JFrame();
+		frame3.getContentPane().setBackground(Color.GRAY);
+		frame3.setBounds(100, 100, 829, 457);
+		frame3.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame3.getContentPane().setLayout(null);
+		
+		textField = new JTextField();
+		textField.setBounds(10, 74, 158, 27);
+		frame3.getContentPane().add(textField);
+		textField.setColumns(10);
+		textField.setEditable(false);
+		
+		textField_1 = new JTextField();
+		textField_1.setColumns(10);
+		textField_1.setEditable(false);
+		textField_1.setBounds(10, 213, 158, 27);
+		frame3.getContentPane().add(textField_1);
+		
+		textField_2 = new JTextField();
+		textField_2.setColumns(10);
+		textField_2.setEditable(false);
+		textField_2.setBounds(103, 139, 158, 27);
+		frame3.getContentPane().add(textField_2);
+		
+		textField_3 = new JTextField();
+		textField_3.setColumns(10);
+		textField_3.setEditable(false);
+		textField_3.setBounds(645, 74, 158, 27);
+		frame3.getContentPane().add(textField_3);
+		
+		textField_4 = new JTextField();
+		textField_4.setColumns(10);
+		textField_4.setEditable(false);
+		textField_4.setBounds(645, 213, 158, 27);
+		frame3.getContentPane().add(textField_4);
+		
+		textField_5 = new JTextField();
+		textField_5.setColumns(10);
+		textField_5.setEditable(false);
+		textField_5.setBounds(526, 139, 158, 27);
+		frame3.getContentPane().add(textField_5);
+		
+		textField_6 = new JTextField();
+		textField_6.setColumns(10); 
+		textField_6.setEditable(false);
+		textField_6.setBounds(318, 139, 158, 27);
+		frame3.getContentPane().add(textField_6);
+		
+		btnStartTournament = new JButton("START TOURNAMENT");
+		btnStartTournament.setBounds(318, 332, 158, 23);
+		frame3.getContentPane().add(btnStartTournament);
+		btnStartTournament.setEnabled(false);
+		btnStartTournament.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				window.frame3.setVisible(false);
+				window.frmGameBoard.setVisible(true);
+			}
+		});
+		
+		JButton btnNewButton = new JButton("New button");
+		btnNewButton.setIcon(new ImageIcon(Tournament.class.getResource("/img/tourney.PNG")));
+		btnNewButton.setBorder(null);
+		btnNewButton.setBounds(0, 0, 830, 418);
+		frame3.getContentPane().add(btnNewButton);
+	}
 }
